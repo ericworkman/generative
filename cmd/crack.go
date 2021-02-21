@@ -2,17 +2,13 @@ package cmd
 
 import (
 	"fmt"
-  "os"
-  "os/signal"
-  "syscall"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/cobra"
 
-  "gitlab.com/ericworkman/generative/sketch"
-)
-
-var (
-  save = false
+	"gitlab.com/ericworkman/generative/sketch"
 )
 
 var crackCmd = &cobra.Command{
@@ -23,39 +19,39 @@ var crackCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("crack called")
 
-    params := sketch.CrackParams{
-      DestWidth: width,
-      DestHeight: height,
-      CrackLimit: 10,
-      Seeds: width / 10 + height / 10,
-      StartingCracks: 2,
-    }
+		params := sketch.CrackParams{
+			DestWidth:      width,
+			DestHeight:     height,
+			CrackLimit:     10,
+			Seeds:          width/10 + height/10,
+			StartingCracks: 2,
+		}
 
-    csketch := sketch.NewCrackSketch(params)
+		csketch := sketch.NewCrackSketch(params)
 
-    // catch the sigterm signal for ctrl-c quitting mostly
-    // save the output at this point
-    c := make(chan os.Signal)
-    signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-    go func() {
-        <-c
-        sketch.SaveOutput(csketch.Output(), outputImgName)
-        os.Exit(1)
-    }()
+		// catch the sigterm signal for ctrl-c quitting mostly
+		// save the output at this point
+		c := make(chan os.Signal)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-c
+			sketch.SaveOutput(csketch.Output(), outputImgName)
+			os.Exit(1)
+		}()
 
-    for i := 0; i < limitByIterations; i++ {
-      fmt.Println("Iteration", i)
+		for i := 0; i < limitByIterations; i++ {
+			fmt.Println("Iteration", i)
 
-      csketch.Update()
+			csketch.Update()
 
-      // save the output every so often so that we don't just lose a lot of work
-      // this isn't a nice way of handling it, but we'll live
-      if (save == true) && (i % 100 == 0) {
-        sketch.SaveOutput(csketch.Output(), outputImgName)
-      }
-    }
+			// save the output every so often so that we don't just lose a lot of work
+			// this isn't a nice way of handling it, but we'll live
+			if (save == true) && (i%100 == 0) {
+				sketch.SaveOutput(csketch.Output(), outputImgName)
+			}
+		}
 
-    sketch.SaveOutput(csketch.Output(), outputImgName)
+		sketch.SaveOutput(csketch.Output(), outputImgName)
 	},
 }
 
@@ -68,4 +64,3 @@ func init() {
 	crackCmd.Flags().IntVarP(&height, "height", "", 1080, "Height of output")
 	crackCmd.Flags().BoolVarP(&save, "save", "s", false, "Save output regularly")
 }
-

@@ -1,15 +1,28 @@
 package cmd
 
 import (
-  "math/rand"
-  "time"
 	"fmt"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
+)
+
+// shared vars for common command line arguments
+var (
+	width         = 1920
+	height        = 1080
+	outputImgName = ""
+	url           = ""
+	save          = false
+
+	limitByIterations = 0
+	alpha             = float64(0)
+	jitter            = float64(0)
 )
 
 var cfgFile string
@@ -35,7 +48,7 @@ func Execute() {
 }
 
 func init() {
-  rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().Unix())
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.

@@ -5,256 +5,260 @@
 package sketch
 
 import (
-  "fmt"
-  "image"
-  "math"
-  "math/rand"
+	"fmt"
+	"image"
+	"image/color"
+	"math"
+	"math/rand"
 
-  "github.com/fogleman/gg"
+	"github.com/fogleman/gg"
 )
 
 const (
-  blankAngle = 10001
+	blankAngle = 10001
 )
 
 var (
-  colors = [...][3]int{
-    {172, 68, 6},
-    {201, 148, 89},
-    {128, 44, 8},
-    {154, 135, 109},
-    {215, 207, 185},
-    {79, 68, 59},
-    {244, 172, 68},
-    {234, 204, 147},
-    {59, 44, 28},
-    {61, 62, 68},
-    {221, 89, 64},
-    {252, 180, 140},
-    {96, 40, 28},
-    {160, 92, 92},
-  }
+	crack_colors = [...][3]int{
+		{172, 68, 6},
+		{201, 148, 89},
+		{128, 44, 8},
+		{154, 135, 109},
+		{215, 207, 185},
+		{79, 68, 59},
+		{244, 172, 68},
+		{234, 204, 147},
+		{59, 44, 28},
+		{61, 62, 68},
+		{221, 89, 64},
+		{252, 180, 140},
+		{96, 40, 28},
+		{160, 92, 92},
+	}
 )
 
 type CrackParams struct {
-  // tweakable parameters for the cli
-  DestWidth int
-  DestHeight int
-  CrackLimit int
-  Seeds int
-  StartingCracks int
+	// tweakable parameters for the cli
+	DestWidth      int
+	DestHeight     int
+	CrackLimit     int
+	Seeds          int
+	StartingCracks int
 }
 
 type CrackSketch struct {
-  // canvas and grid wrapper
-  CrackParams
-  DC *gg.Context
-  GridSize int
-  Grid []int
-  Cracks []Crack
+	// canvas and grid wrapper
+	CrackParams
+	DC       *gg.Context
+	GridSize int
+	Grid     []int
+	Cracks   []Crack
 }
 
 type Crack struct {
-  // the dark lines that look like cracks
-  X float64
-  Y float64
-  T float64 // direction in degrees
-  SP SandPainter
+	// the dark lines that look like cracks
+	X  float64
+	Y  float64
+	T  float64 // direction in degrees
+	SP SandPainter
 }
 
 // Grow a crack it its direction t. Color to the side of it some distance using the SandPainter.
 func (c *Crack) Move(sketch *CrackSketch) {
-  c.X += 0.42 * math.Cos(c.T * math.Pi / 180);
-  c.Y += 0.42 * math.Sin(c.T * math.Pi / 180);
+	c.X += 0.42 * math.Cos(c.T*math.Pi/180)
+	c.Y += 0.42 * math.Sin(c.T*math.Pi/180)
 
-  // bound check
-  z := 0.25
-  cx := int(c.X + randFloat64Range(z))
-  cy := int(c.Y + randFloat64Range(z))
+	// bound check
+	z := 0.25
+	cx := int(c.X + randFloat64Range(z))
+	cy := int(c.Y + randFloat64Range(z))
 
-  // draw sand painter
-  c.RegionColor(sketch);
+	// draw sand painter
+	c.RegionColor(sketch)
 
-  // draw black crack
-  sketch.DC.SetRGBA255(0, 0, 0, 180)
+	// draw black crack
+	sketch.DC.SetRGBA255(0, 0, 0, 180)
 
-  // TODO: replace jitter
-  x := int(c.X + randFloat64Range(z))
-  y := int(c.Y + randFloat64Range(z))
-  sketch.DC.SetPixel(x, y)
+	// TODO: replace jitter
+	x := int(c.X + randFloat64Range(z))
+	y := int(c.Y + randFloat64Range(z))
+	sketch.DC.SetPixel(x, y)
 
-  sketch.DC.Stroke()
+	sketch.DC.Stroke()
 
-  if (cx >= 0) && (cy >= 0) && (cx < sketch.DestWidth) && (cy < sketch.DestHeight) {
-    // within bounds of canvas
+	if (cx >= 0) && (cy >= 0) && (cx < sketch.DestWidth) && (cy < sketch.DestHeight) {
+		// within bounds of canvas
 
-    if (sketch.Grid[cy * sketch.DestWidth + cx] > 10000) || (math.Abs(float64(sketch.Grid[cy * sketch.DestWidth + cx]) - c.T) < 5.0) {
-      // continue growing
-      sketch.Grid[cy * sketch.DestWidth + cx] = int(c.T)
+		if (sketch.Grid[cy*sketch.DestWidth+cx] > 10000) || (math.Abs(float64(sketch.Grid[cy*sketch.DestWidth+cx])-c.T) < 5.0) {
+			// continue growing
+			sketch.Grid[cy*sketch.DestWidth+cx] = int(c.T)
 
-    } else if (math.Abs(float64(sketch.Grid[cy * sketch.DestWidth + cx]) - c.T) > 2.0) {
-      // found a different crack, so this crack ends
-      c.findStart(sketch)
-      makeCrack(sketch);
-    }
+		} else if math.Abs(float64(sketch.Grid[cy*sketch.DestWidth+cx])-c.T) > 2.0 {
+			// found a different crack, so this crack ends
+			c.findStart(sketch)
+			makeCrack(sketch)
+		}
 
-  } else {
-    // out of bounds, stop cracking
-    c.findStart(sketch)
-    makeCrack(sketch);
-  }
+	} else {
+		// out of bounds, stop cracking
+		c.findStart(sketch)
+		makeCrack(sketch)
+	}
 }
 
 func (crack *Crack) findStart(sketch *CrackSketch) {
-  // pick random spots on the canvas until a crack is found
-  // a crack is any cell on the grid with a degree value between -360 and 360, or really less than the blank value
-  // limit the number of times this attempts to find a crack with the timeout
-  var px, py int
-  found := false
-  timeout := 0
-  for ok := true; ok; ok = ((found == false) && (timeout <= 10000)) {
-    timeout += 1
-    px = rand.Intn(sketch.DestWidth)
-    py = rand.Intn(sketch.DestHeight)
-    if sketch.Grid[py * sketch.DestWidth + px] < 10000 {
-      found = true
-    }
-  }
+	// pick random spots on the canvas until a crack is found
+	// a crack is any cell on the grid with a degree value between -360 and 360, or really less than the blank value
+	// limit the number of times this attempts to find a crack with the timeout
+	var px, py int
+	found := false
+	timeout := 0
+	for ok := true; ok; ok = ((found == false) && (timeout <= 10000)) {
+		timeout += 1
+		px = rand.Intn(sketch.DestWidth)
+		py = rand.Intn(sketch.DestHeight)
+		if sketch.Grid[py*sketch.DestWidth+px] < 10000 {
+			found = true
+		}
+	}
 
-  if found == true {
-    // found a starting point, so now pick a perpendicular angle to the existing crack angle
-    // we add some angle jitter here too for interest
-    a := sketch.Grid[py * sketch.DestWidth + px]
-    if rand.Intn(100) < 50 {
-      a -= 90 + randRange(3)
-    } else {
-      a += 90 + randRange(3)
-    }
-    crack.T = float64(a)
-    crack.X = float64(px)// + 0.61 * math.Cos(crack.T * math.Pi / 180)
-    crack.Y = float64(py)// + 0.61 * math.Sin(crack.T * math.Pi / 180)
-    crack.SP = NewSandPainter()
-  }
+	if found == true {
+		// found a starting point, so now pick a perpendicular angle to the existing crack angle
+		// we add some angle jitter here too for interest
+		a := sketch.Grid[py*sketch.DestWidth+px]
+		if rand.Intn(100) < 50 {
+			a -= 90 + randRange(3)
+		} else {
+			a += 90 + randRange(3)
+		}
+		crack.T = float64(a)
+		crack.X = float64(px) // + 0.61 * math.Cos(crack.T * math.Pi / 180)
+		crack.Y = float64(py) // + 0.61 * math.Sin(crack.T * math.Pi / 180)
+		crack.SP = NewSandPainter()
+	}
 }
 
 func makeCrack(sketch *CrackSketch) Crack {
-  crack := Crack{}
-  // only make a new crack if there's a slot for one
-  if len(sketch.Cracks) < sketch.CrackLimit {
-    crack.findStart(sketch)
-    sketch.Cracks = append(sketch.Cracks, crack)
-  }
-  return crack
+	crack := Crack{}
+	// only make a new crack if there's a slot for one
+	if len(sketch.Cracks) < sketch.CrackLimit {
+		crack.findStart(sketch)
+		sketch.Cracks = append(sketch.Cracks, crack)
+	}
+	return crack
 }
 
 func NewCrackSketch(crackParams CrackParams) *CrackSketch {
-  fmt.Println("Starting Sketch")
+	fmt.Println("Starting Sketch")
 
-  s := &CrackSketch{CrackParams: crackParams}
+	s := &CrackSketch{CrackParams: crackParams}
 
-  // the grid is dimensionally the same as the canvas, but contains angles in degrees or a blank value
-  cgrid := make([]int, s.DestWidth * s.DestHeight)
-  s.GridSize = len(cgrid)
-  for i := 0; i < s.GridSize; i ++ {
-    cgrid[i] = blankAngle
-  }
+	// the grid is dimensionally the same as the canvas, but contains angles in degrees or a blank value
+	cgrid := make([]int, s.DestWidth*s.DestHeight)
+	s.GridSize = len(cgrid)
+	for i := 0; i < s.GridSize; i++ {
+		cgrid[i] = blankAngle
+	}
 
-  // preseed some spots in the grid with real angles
-  for k := 0; k < s.Seeds; k++ {
-    i := rand.Intn(s.DestWidth * s.DestHeight - 1)
-    cgrid[i] = rand.Intn(360)
-  }
+	// preseed some spots in the grid with real angles
+	for k := 0; k < s.Seeds; k++ {
+		i := rand.Intn(s.DestWidth*s.DestHeight - 1)
+		cgrid[i] = rand.Intn(360)
+	}
 
-  s.Grid = cgrid
+	s.Grid = cgrid
 
-  // start the cracks
-  for k := 0; k < s.StartingCracks; k++ {
-    makeCrack(s);
-  }
+	// start the cracks
+	for k := 0; k < s.StartingCracks; k++ {
+		makeCrack(s)
+	}
 
-  // canvas is a gg image context and contains what gets drawn to the screen
-  canvas := gg.NewContext(s.DestWidth, s.DestHeight)
-  s.DC = canvas
-  return s
+	// canvas is a gg image context and contains what gets drawn to the screen
+	canvas := gg.NewContext(s.DestWidth, s.DestHeight)
+	canvas.SetColor(color.White)
+	canvas.DrawRectangle(0, 0, float64(s.DestWidth), float64(s.DestHeight))
+	canvas.FillPreserve()
+	s.DC = canvas
+	return s
 }
 
 func (s *CrackSketch) Output() image.Image {
-  return s.DC.Image()
+	return s.DC.Image()
 }
 
 func (s *CrackSketch) Update() {
-  // allow the cracks to grow a step
-  for i := 0; i < len(s.Cracks); i++ {
-    s.Cracks[i].Move(s)
-  }
+	// allow the cracks to grow a step
+	for i := 0; i < len(s.Cracks); i++ {
+		s.Cracks[i].Move(s)
+	}
 }
 
 type SandPainter struct {
-  // creates transparent "grains of sands" perpendicular to the crack with a lot of variation
-  // contains color components and a grain size
-  R int
-  G int
-  B int
-  GrainSize float64
+	// creates transparent "grains of sands" perpendicular to the crack with a lot of variation
+	// contains color components and a grain size
+	R         int
+	G         int
+	B         int
+	GrainSize float64
 }
 
 func NewSandPainter() SandPainter {
-  // aim for desert colors, a slight departure from Tarbell's
-  // Tarbell's version takes colors from an image, while this one selects from a predefined list of colors
-  color := colors[rand.Intn(len(colors))]
-  sp := SandPainter{R: color[0], G: color[1], B: color[2], GrainSize: randFloat64RangeFrom(0.01, 0.01)}
-  return sp
+	// aim for desert colors, a slight departure from Tarbell's
+	// Tarbell's version takes colors from an image, while this one selects from a predefined list of colors
+	color := crack_colors[rand.Intn(len(crack_colors))]
+	sp := SandPainter{R: color[0], G: color[1], B: color[2], GrainSize: randFloat64RangeFrom(0.01, 0.01)}
+	return sp
 }
 
 func (sp *SandPainter) Render(s *CrackSketch, x, y, ox, oy float64) {
-  // modulate gain, clamping it between 0 and 1.0
-  sp.GrainSize += randFloat64Range(0.050)
-  maxg := 1.0
-  if sp.GrainSize < 0 {
-    sp.GrainSize = 0
-  }
-  if sp.GrainSize > maxg {
-    sp.GrainSize = maxg
-  }
+	// modulate gain, clamping it between 0 and 1.0
+	sp.GrainSize += randFloat64Range(0.050)
+	maxg := 1.0
+	if sp.GrainSize < 0 {
+		sp.GrainSize = 0
+	}
+	if sp.GrainSize > maxg {
+		sp.GrainSize = maxg
+	}
 
-  // proportion grain count for smoothness
-  grains := int(math.Sqrt(float64((ox - x) * (ox - x) + (oy - y) * (oy - y))))
+	// proportion grain count for smoothness
+	grains := int(math.Sqrt(float64((ox-x)*(ox-x) + (oy-y)*(oy-y))))
 
-  // draw the sand grains
-  w := sp.GrainSize / float64(grains - 1)
-  for i := 0; i < grains; i++ {
-    a := 7
-    x := ox + (x - ox) * math.Sin(math.Sin(float64(i) * w))
-    y := oy + (y - oy) * math.Sin(math.Sin(float64(i) * w))
-    s.DC.SetRGBA255(sp.R, sp.G, sp.B, a)
-    s.DC.DrawPoint(x, y, 0.6)
-    s.DC.Stroke()
-  }
+	// draw the sand grains
+	w := sp.GrainSize / float64(grains-1)
+	for i := 0; i < grains; i++ {
+		a := 7
+		x := ox + (x-ox)*math.Sin(math.Sin(float64(i)*w))
+		y := oy + (y-oy)*math.Sin(math.Sin(float64(i)*w))
+		s.DC.SetRGBA255(sp.R, sp.G, sp.B, a)
+		s.DC.DrawPoint(x, y, 0.6)
+		s.DC.Stroke()
+	}
 }
 
 func (c *Crack) RegionColor(s *CrackSketch) {
-  // find the open region that can be colored that's perpendicular to the crack at the new pixel
-  // we use the boundary of this open space to determine how to draw the sand
-  rx := c.X
-  ry := c.Y
+	// find the open region that can be colored that's perpendicular to the crack at the new pixel
+	// we use the boundary of this open space to determine how to draw the sand
+	rx := c.X
+	ry := c.Y
 
-  openspace := true
-  for ok := true; ok; ok = openspace {
-    // move perpendicular to crack
-    rx += 0.81 * math.Sin(c.T * math.Pi / 180);
-    ry -= 0.81 * math.Cos(c.T * math.Pi / 180);
-    cx := int(rx)
-    cy := int(ry)
+	openspace := true
+	for ok := true; ok; ok = openspace {
+		// move perpendicular to crack
+		rx += 0.81 * math.Sin(c.T*math.Pi/180)
+		ry -= 0.81 * math.Cos(c.T*math.Pi/180)
+		cx := int(rx)
+		cy := int(ry)
 
-    // limit the maximum size of the region to be within the bounds of the canvas and only a percent of the dimensions
-    if (cx >= 0) && (cy >= 0) && (cx < s.DestWidth) && (cy < s.DestHeight) && (int(math.Abs(float64(cx) - c.X)) < s.DestWidth / 10) && (int(math.Abs(float64(cy) - c.Y)) < s.DestHeight / 10) {
-      if s.Grid[cy * s.DestWidth + cx] <= 10000 {
-        openspace = false
-      }
-    } else {
-      openspace = false
-    }
-  }
+		// limit the maximum size of the region to be within the bounds of the canvas and only a percent of the dimensions
+		if (cx >= 0) && (cy >= 0) && (cx < s.DestWidth) && (cy < s.DestHeight) && (int(math.Abs(float64(cx)-c.X)) < s.DestWidth/10) && (int(math.Abs(float64(cy)-c.Y)) < s.DestHeight/10) {
+			if s.Grid[cy*s.DestWidth+cx] <= 10000 {
+				openspace = false
+			}
+		} else {
+			openspace = false
+		}
+	}
 
-  c.SP.Render(s, rx, ry, c.X, c.Y)
+	c.SP.Render(s, rx, ry, c.X, c.Y)
 }

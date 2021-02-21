@@ -3,25 +3,18 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-  "gitlab.com/ericworkman/generative/sketch"
+	"gitlab.com/ericworkman/generative/sketch"
 )
 
 var (
-  outputImgName = ""
-  url = ""
-  limitByIterations = 0
-  limitBySize = float64(5)
-  reduction = float64(0)
-  ratio = float64(0)
-  alpha = float64(0)
-  alphaIncrease = float64(0)
-  jitter = float64(0)
-  edge = false
-  edgeMin = 0
-  edgeMax = 0
-  width = 1920
-  height = 1080
-  inversionThreshold = float64(5)
+	limitBySize        = float64(5)
+	reduction          = float64(0)
+	ratio              = float64(0)
+	alphaIncrease      = float64(0)
+	edge               = false
+	edgeMin            = 0
+	edgeMax            = 0
+	inversionThreshold = float64(5)
 )
 
 var layerCmd = &cobra.Command{
@@ -31,40 +24,40 @@ var layerCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-    img, _ := sketch.LoadUnsplashImage(width, height, url)
+		img, _ := sketch.LoadUnsplashImage(width, height, url)
 
-    if edgeMin > edgeMax {
-      edgeMax = edgeMin
-    }
+		if edgeMin > edgeMax {
+			edgeMax = edgeMin
+		}
 
-    params := sketch.LayerParams{
-      DestWidth: width,
-      DestHeight: height,
-      PathRatio: ratio,
-      PathReduction: reduction,
-      PathMin: limitBySize,
-      PathJitter: int(jitter * float64(width)),
-      InitialAlpha: alpha,
-      AlphaIncrease: alphaIncrease,
-      MinEdgeCount: edgeMin,
-      MaxEdgeCount: edgeMax,
-      Edge: edge,
-      PathInversionThreshold: inversionThreshold,
-    }
+		params := sketch.LayerParams{
+			DestWidth:              width,
+			DestHeight:             height,
+			PathRatio:              ratio,
+			PathReduction:          reduction,
+			PathMin:                limitBySize,
+			PathJitter:             int(jitter * float64(width)),
+			InitialAlpha:           alpha,
+			AlphaIncrease:          alphaIncrease,
+			MinEdgeCount:           edgeMin,
+			MaxEdgeCount:           edgeMax,
+			Edge:                   edge,
+			PathInversionThreshold: inversionThreshold,
+		}
 
-    lsketch := sketch.NewLayerSketch(img, params)
+		lsketch := sketch.NewLayerSketch(img, params)
 
-    if limitByIterations == 0 {
-      for i := 0; lsketch.PathSize >= params.PathMin; i++ {
-        lsketch.Update()
-      }
-    } else {
-      for i := 0; i < limitByIterations; i++ {
-        lsketch.Update()
-      }
-    }
+		if limitByIterations == 0 {
+			for i := 0; lsketch.PathSize >= params.PathMin; i++ {
+				lsketch.Update()
+			}
+		} else {
+			for i := 0; i < limitByIterations; i++ {
+				lsketch.Update()
+			}
+		}
 
-    sketch.SaveOutput(lsketch.Output(), outputImgName)
+		sketch.SaveOutput(lsketch.Output(), outputImgName)
 	},
 }
 
