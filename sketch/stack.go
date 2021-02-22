@@ -8,25 +8,6 @@ import (
 	"github.com/fogleman/gg"
 )
 
-var (
-	stack_colors = [...][3]int{
-		{172, 68, 6},
-		{201, 148, 89},
-		{128, 44, 8},
-		{154, 135, 109},
-		{215, 207, 185},
-		{79, 68, 59},
-		{244, 172, 68},
-		{234, 204, 147},
-		{59, 44, 28},
-		{61, 62, 68},
-		{221, 89, 64},
-		{252, 180, 140},
-		{96, 40, 28},
-		{160, 92, 92},
-	}
-)
-
 type StackParams struct {
 	// tweakable parameters for the cli
 	DestWidth  int
@@ -56,6 +37,7 @@ func NewStackSketch(source image.Image, params StackParams) *StackSketch {
 	canvas.SetColor(color.White)
 	canvas.DrawRectangle(0, 0, float64(s.DestWidth), float64(s.DestHeight))
 	canvas.FillPreserve()
+	canvas.Stroke()
 	s.DC = canvas
 	return s
 }
