@@ -44,11 +44,8 @@ type SpiralParams struct {
 // SpiralSketch wraps all the components needed to draw the spiral sketch
 type SpiralSketch struct {
 	SpiralParams
-	source       image.Image
-	DC           *gg.Context
-	sourceWidth  int
-	sourceHeight int
-	currentR     float64
+	DC       *gg.Context
+	currentR float64
 }
 
 // NewSpiralSketch initializes the canvas and SpiralSketch
@@ -90,7 +87,7 @@ func (s *SpiralSketch) Update(i int) {
 	s.DC.SetRGBA255(color[0], color[1], color[2], i)
 	// logistic growth of radius, barely noticable in practice I think
 	s.currentR += 0.006 * float64(i) * float64(s.Iterations-i) / float64(s.Iterations)
-	fmt.Println(s.currentR)
+	//fmt.Println(s.currentR)
 	s.DC.DrawCircle(x, y, s.currentR)
 	s.DC.FillPreserve()
 	s.DC.Stroke()
