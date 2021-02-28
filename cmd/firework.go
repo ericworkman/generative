@@ -1,3 +1,7 @@
+/*
+Copyright © 2021 Eric Workman <eric@ericworkman.com>
+
+*/
 package cmd
 
 import (
@@ -10,20 +14,20 @@ import (
 	"gitlab.com/ericworkman/generative/sketch"
 )
 
-// andersonCmd represents the anderson command
-var andersonCmd = &cobra.Command{
-	Use:   "anderson",
-	Short: "Create art based on Jason Anderson's work",
+// fireworkCmd represents the firework command
+var fireworkCmd = &cobra.Command{
+	Use:   "firework",
+	Short: "Generate a firework",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("anderson called")
-		params := sketch.AndersonParams{
+		fmt.Println("firework called")
+		params := sketch.FireworkParams{
 			DestWidth:  width,
 			DestHeight: height,
 			Iterations: limitByIterations,
 		}
 
-		csketch := sketch.NewAndersonSketch(params)
+		csketch := sketch.NewFireworkSketch(params)
 
 		// catch the sigterm signal for ctrl-c quitting mostly
 		// save the output at this point
@@ -36,7 +40,9 @@ var andersonCmd = &cobra.Command{
 		}()
 
 		for i := 0; i <= limitByIterations; i++ {
-			fmt.Println("Iteration", i)
+			if i%(limitByIterations/10) == 0 {
+				fmt.Println("Iteration", i)
+			}
 
 			csketch.Update(i)
 			if save == true {
@@ -49,10 +55,9 @@ var andersonCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(andersonCmd)
-
-	andersonCmd.Flags().StringVarP(&outputImgName, "out", "o", "out.png", "Output image name")
-	andersonCmd.Flags().IntVarP(&limitByIterations, "iterations", "i", 3, "Number of iterations")
-	andersonCmd.Flags().IntVarP(&width, "width", "", 1920, "Width of output")
-	andersonCmd.Flags().IntVarP(&height, "height", "", 1080, "Height of output")
+	rootCmd.AddCommand(fireworkCmd)
+	fireworkCmd.Flags().StringVarP(&outputImgName, "out", "o", "out.png", "Output image name")
+	fireworkCmd.Flags().IntVarP(&limitByIterations, "iterations", "i", 3, "Number of iterations")
+	fireworkCmd.Flags().IntVarP(&width, "width", "", 1920, "Width of output")
+	fireworkCmd.Flags().IntVarP(&height, "height", "", 1080, "Height of output")
 }
