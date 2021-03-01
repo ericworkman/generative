@@ -9,6 +9,7 @@ import (
 
 	"github.com/fogleman/gg"
 	"github.com/teacat/noire"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 var (
@@ -55,7 +56,7 @@ func NewAndersonSketch(params AndersonParams) *AndersonSketch {
 	fmt.Println("Starting Sketch")
 
 	s := &AndersonSketch{AndersonParams: params, currentR: 2.0}
-	s.horizon = randIntRangeFrom(s.DestHeight/5, s.DestHeight*4/5)
+	s.horizon = util.RandIntRangeFrom(s.DestHeight/5, s.DestHeight*4/5)
 	//s.horizon = 300
 	s.slot = float64(s.DestWidth) / 8.0
 
@@ -109,7 +110,7 @@ func (s *AndersonSketch) Update(i int) {
 		nextStepWidth := float64(s.slot) / float64(i+2)
 		w := maxWidth
 		if i != 0 {
-			w = randFloat64RangeFrom(nextStepWidth+(maxWidth-nextStepWidth)/2, maxWidth)
+			w = util.RandFloat64RangeFrom(nextStepWidth+(maxWidth-nextStepWidth)/2, maxWidth)
 		}
 		// push the starting place to the right if selected at initilization
 		if s.slotOffsets[j] == -1 {
@@ -118,7 +119,7 @@ func (s *AndersonSketch) Update(i int) {
 
 		maxHeight := y / float64(i+1)
 		nextStepHeight := y / float64(i+2)
-		h := randFloat64RangeFrom(nextStepHeight, maxHeight)
+		h := util.RandFloat64RangeFrom(nextStepHeight, maxHeight)
 
 		// gradient is two circles: first is the solid color and is the smaller of the two
 		// second is the transparent color and is larger
@@ -126,9 +127,9 @@ func (s *AndersonSketch) Update(i int) {
 		// transparent color is 100% outside the second circle.
 		// Ensure the first circle is entirely below the horizon, so that the base is a solid color.
 		// Jitter left and right and radius of larger circle for some variation
-		grad := gg.NewRadialGradient(x+w/2, y+5, 5, x+w/2+randFloat64Range(5), y+5, h+randFloat64Range(5))
+		grad := gg.NewRadialGradient(x+w/2, y+5, 5, x+w/2+util.RandFloat64Range(5), y+5, h+util.RandFloat64Range(5))
 
-		alpha := minFloat64(0.2+0.2*float64(i), 1.0)
+		alpha := util.MinFloat64(0.2+0.2*float64(i), 1.0)
 		solid := color.RGBA{}
 		solid.R = uint8(alpha * float64(acolor[0]))
 		solid.G = uint8(alpha * float64(acolor[1]))
@@ -154,7 +155,7 @@ func (s *AndersonSketch) Update(i int) {
 		wcolor := noire.NewRGB(float64(acolor[0]), float64(acolor[1]), float64(acolor[2]))
 		r, g, b := wcolor.Darken(0.33).RGB()
 
-		walpha := minFloat64(0.2+0.2*float64(i), 1.0)
+		walpha := util.MinFloat64(0.2+0.2*float64(i), 1.0)
 		wsolid := color.RGBA{}
 		wsolid.R = uint8(walpha * float64(r))
 		wsolid.G = uint8(walpha * float64(g))
@@ -201,7 +202,7 @@ func (s *AndersonSketch) Update(i int) {
 			for t := 0; t < 3; t++ {
 				left := math.Round(x + float64(t)*s.slot/3)
 				if t == 1 {
-					hj = randFloat64Range(he / 5)
+					hj = util.RandFloat64Range(he / 5)
 				} else {
 					hj = 0.0
 				}
@@ -256,7 +257,7 @@ func (s *AndersonSketch) Update(i int) {
 			ripples := (s.DestHeight - s.horizon) / 100
 			for k := 0; k < ripples; k++ {
 				s.DC.SetRGBA255(dark[0], dark[1], dark[2], 10)
-				s.DC.DrawRectangle(0, float64(s.horizon+100*k)+randFloat64Range(5.0), float64(s.DestWidth), 10+randFloat64Range(3))
+				s.DC.DrawRectangle(0, float64(s.horizon+100*k)+util.RandFloat64Range(5.0), float64(s.DestWidth), 10+util.RandFloat64Range(3))
 				s.DC.Fill()
 				s.DC.Stroke()
 			}

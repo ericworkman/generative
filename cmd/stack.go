@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"gitlab.com/ericworkman/generative/sketch"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 // stackCmd represents the stack command
@@ -18,7 +19,7 @@ var stackCmd = &cobra.Command{
 	Long:  `Use iterations < 150 for regular usage`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("stack called")
-		img, _ := sketch.LoadUnsplashImage(width, height, url)
+		img, _ := util.LoadUnsplashImage(width, height, url)
 
 		params := sketch.StackParams{
 			DestWidth:  width,
@@ -33,7 +34,7 @@ var stackCmd = &cobra.Command{
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		go func() {
 			<-c
-			sketch.SaveOutput(csketch.Output(), outputImgName)
+			util.SaveOutput(csketch.Output(), outputImgName)
 			os.Exit(1)
 		}()
 
@@ -42,11 +43,11 @@ var stackCmd = &cobra.Command{
 
 			csketch.Update(i)
 			if save == true {
-				sketch.SaveOutput(csketch.Output(), outputImgName)
+				util.SaveOutput(csketch.Output(), outputImgName)
 			}
 		}
 
-		sketch.SaveOutput(csketch.Output(), outputImgName)
+		util.SaveOutput(csketch.Output(), outputImgName)
 	},
 }
 

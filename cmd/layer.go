@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"gitlab.com/ericworkman/generative/sketch"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 var (
@@ -24,7 +25,7 @@ var layerCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		img, _ := sketch.LoadUnsplashImage(width, height, url)
+		img, _ := util.LoadUnsplashImage(width, height, url)
 
 		if edgeMin > edgeMax {
 			edgeMax = edgeMin
@@ -57,7 +58,7 @@ var layerCmd = &cobra.Command{
 			}
 		}
 
-		sketch.SaveOutput(lsketch.Output(), outputImgName)
+		util.SaveOutput(lsketch.Output(), outputImgName)
 	},
 }
 

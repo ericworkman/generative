@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"gitlab.com/ericworkman/generative/sketch"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 var crackCmd = &cobra.Command{
@@ -35,7 +36,7 @@ var crackCmd = &cobra.Command{
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		go func() {
 			<-c
-			sketch.SaveOutput(csketch.Output(), outputImgName)
+			util.SaveOutput(csketch.Output(), outputImgName)
 			os.Exit(1)
 		}()
 
@@ -47,11 +48,11 @@ var crackCmd = &cobra.Command{
 			// save the output every so often so that we don't just lose a lot of work
 			// this isn't a nice way of handling it, but we'll live
 			if (save == true) && (i%100 == 0) {
-				sketch.SaveOutput(csketch.Output(), outputImgName)
+				util.SaveOutput(csketch.Output(), outputImgName)
 			}
 		}
 
-		sketch.SaveOutput(csketch.Output(), outputImgName)
+		util.SaveOutput(csketch.Output(), outputImgName)
 	},
 }
 

@@ -1,7 +1,3 @@
-/*
-Copyright © 2021 Eric Workman <eric@ericworkman.com>
-
-*/
 package cmd
 
 import (
@@ -12,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"gitlab.com/ericworkman/generative/sketch"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 // fireworkCmd represents the firework command
@@ -35,7 +32,7 @@ var fireworkCmd = &cobra.Command{
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		go func() {
 			<-c
-			sketch.SaveOutput(csketch.Output(), outputImgName)
+			util.SaveOutput(csketch.Output(), outputImgName)
 			os.Exit(1)
 		}()
 
@@ -46,11 +43,11 @@ var fireworkCmd = &cobra.Command{
 
 			csketch.Update(i)
 			if save == true {
-				sketch.SaveOutput(csketch.Output(), outputImgName)
+				util.SaveOutput(csketch.Output(), outputImgName)
 			}
 		}
 
-		sketch.SaveOutput(csketch.Output(), outputImgName)
+		util.SaveOutput(csketch.Output(), outputImgName)
 	},
 }
 

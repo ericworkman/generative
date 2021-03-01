@@ -12,6 +12,7 @@ import (
 	"math/rand"
 
 	"github.com/fogleman/gg"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 const (
@@ -70,8 +71,8 @@ func (c *Crack) Move(sketch *CrackSketch) {
 
 	// bound check
 	z := 0.25
-	cx := int(c.X + randFloat64Range(z))
-	cy := int(c.Y + randFloat64Range(z))
+	cx := int(c.X + util.RandFloat64Range(z))
+	cy := int(c.Y + util.RandFloat64Range(z))
 
 	// draw sand painter
 	c.RegionColor(sketch)
@@ -80,8 +81,8 @@ func (c *Crack) Move(sketch *CrackSketch) {
 	sketch.DC.SetRGBA255(0, 0, 0, 180)
 
 	// TODO: replace jitter
-	x := int(c.X + randFloat64Range(z))
-	y := int(c.Y + randFloat64Range(z))
+	x := int(c.X + util.RandFloat64Range(z))
+	y := int(c.Y + util.RandFloat64Range(z))
 	sketch.DC.SetPixel(x, y)
 
 	sketch.DC.Stroke()
@@ -127,9 +128,9 @@ func (crack *Crack) findStart(sketch *CrackSketch) {
 		// we add some angle jitter here too for interest
 		a := sketch.Grid[py*sketch.DestWidth+px]
 		if rand.Intn(100) < 50 {
-			a -= 90 + randRange(3)
+			a -= 90 + util.RandRange(3)
 		} else {
-			a += 90 + randRange(3)
+			a += 90 + util.RandRange(3)
 		}
 		crack.T = float64(a)
 		crack.X = float64(px) // + 0.61 * math.Cos(crack.T * math.Pi / 180)
@@ -206,13 +207,13 @@ func NewSandPainter() SandPainter {
 	// aim for desert colors, a slight departure from Tarbell's
 	// Tarbell's version takes colors from an image, while this one selects from a predefined list of colors
 	color := crack_colors[rand.Intn(len(crack_colors))]
-	sp := SandPainter{R: color[0], G: color[1], B: color[2], GrainSize: randFloat64RangeFrom(0.01, 0.01)}
+	sp := SandPainter{R: color[0], G: color[1], B: color[2], GrainSize: util.RandFloat64RangeFrom(0.01, 0.01)}
 	return sp
 }
 
 func (sp *SandPainter) Render(s *CrackSketch, x, y, ox, oy float64) {
 	// modulate gain, clamping it between 0 and 1.0
-	sp.GrainSize += randFloat64Range(0.050)
+	sp.GrainSize += util.RandFloat64Range(0.050)
 	maxg := 1.0
 	if sp.GrainSize < 0 {
 		sp.GrainSize = 0

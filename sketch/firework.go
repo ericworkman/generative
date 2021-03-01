@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"github.com/fogleman/gg"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 // FireworkParams contains externally-provided parameters
@@ -33,7 +34,7 @@ func NewFireworkSketch(params FireworkParams) *FireworkSketch {
 
 	// Draw a line from some middle point on the left to the inverse point on the right
 	// all bursts will be below this line, save for the offsets
-	startX := int(randFloat64RangeFrom(0.33*float64(params.DestHeight), 0.67*float64(params.DestHeight)))
+	startX := int(util.RandFloat64RangeFrom(0.33*float64(params.DestHeight), 0.67*float64(params.DestHeight)))
 	s.slope = float64(s.DestHeight-2*startX) / float64(s.DestWidth)
 	s.x1 = startX
 	//fmt.Println("y = (", s.slope, ") * x + ", s.x1)
@@ -57,7 +58,7 @@ func (s *FireworkSketch) Output() image.Image {
 // Update makes a logical step into generation
 func (s *FireworkSketch) Update(i int) {
 	rndX := rand.Float64() * float64(s.DestWidth)
-	rndY := randFloat64RangeFrom(s.slope*rndX+float64(s.x1), float64(s.DestHeight))
+	rndY := util.RandFloat64RangeFrom(s.slope*rndX+float64(s.x1), float64(s.DestHeight))
 
 	// burst
 	color := [3]int{253, 255, 240}
@@ -77,8 +78,8 @@ func (s *FireworkSketch) Update(i int) {
 		{0, 8},
 	}
 	scale := 255 * i / s.Iterations
-	alpha := maxInt(10, scale-50)
-	radius := maxFloat64(7, float64(60-3*scale/4))
+	alpha := util.MaxInt(10, scale-50)
+	radius := util.MaxFloat64(7, float64(60-3*scale/4))
 	//fmt.Println(scale, alpha, radius)
 
 	for _, offset := range offsets {

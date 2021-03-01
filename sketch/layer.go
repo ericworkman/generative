@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"github.com/fogleman/gg"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 type LayerParams struct {
@@ -58,12 +59,12 @@ func (s *LayerSketch) Output() image.Image {
 func (s *LayerSketch) Update() {
 	rndX := rand.Float64() * float64(s.sourceWidth)
 	rndY := rand.Float64() * float64(s.sourceHeight)
-	r, g, b := rgb255(s.source.At(int(rndX), int(rndY)))
+	r, g, b := util.Rgb255(s.source.At(int(rndX), int(rndY)))
 
 	destX := rndX * float64(s.DestWidth) / float64(s.sourceWidth)
-	destX += float64(randRange(s.PathJitter))
+	destX += float64(util.RandRange(s.PathJitter))
 	destY := rndY * float64(s.DestHeight) / float64(s.sourceHeight)
-	destY += float64(randRange(s.PathJitter))
+	destY += float64(util.RandRange(s.PathJitter))
 
 	s.DC.SetRGBA255(r, g, b, int(s.InitialAlpha))
 	edges := s.MinEdgeCount + rand.Intn(s.MaxEdgeCount-s.MinEdgeCount+1)

@@ -6,6 +6,7 @@ import (
 	"image/color"
 
 	"github.com/fogleman/gg"
+	"gitlab.com/ericworkman/generative/util"
 )
 
 type StackParams struct {
@@ -53,7 +54,7 @@ func (s *StackSketch) Update(i int) {
 
 	for x := 0.0; x < float64(s.DestWidth); x += limitX {
 		for y := 0.0; y < float64(s.DestHeight); y += limitY {
-			r, g, b := rgb255(s.source.At(int(x+limitX/2), int(y+limitY/2)))
+			r, g, b := util.Rgb255(s.source.At(int(x+limitX/2), int(y+limitY/2)))
 			s.DC.SetRGBA255(r, g, b, 255/i)
 			s.DC.DrawEllipse(x+limitX/2, y+limitY/2, limitX/2, limitY/2)
 			s.DC.FillPreserve()
