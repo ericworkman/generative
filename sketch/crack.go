@@ -1,7 +1,3 @@
-// This is ported almost directly from Jared Tarbell's Processing sketch "Substrate".
-// See details at http://www.complexification.net/gallery/machines/substrate/
-// There are a few spots with a couple changes mostly to fit into golang and gg.
-// This hasn't been optimized and very likely has bugs, but it does produce nice results.
 package sketch
 
 import (
@@ -20,7 +16,7 @@ const (
 )
 
 var (
-	crack_colors = [...][3]int{
+	crackColors = [...][3]int{
 		{172, 68, 6},
 		{201, 148, 89},
 		{128, 44, 8},
@@ -38,6 +34,7 @@ var (
 	}
 )
 
+// CrackParams contains user input options
 type CrackParams struct {
 	// tweakable parameters for the cli
 	DestWidth      int
@@ -47,25 +44,29 @@ type CrackParams struct {
 	StartingCracks int
 }
 
+// CrackSketch contains a canvas, a grid, a set of cracks, and some other information
 type CrackSketch struct {
-	// canvas and grid wrapper
+	// This is ported almost directly from Jared Tarbell's Processing sketch "Substrate".
+	// See details at http://www.complexification.net/gallery/machines/substrate/
+	// There are a few spots with a couple changes mostly to fit into golang and gg.
+	// This hasn't been optimized and very likely has bugs, but it does produce nice results.
 	CrackParams
 	DC       *gg.Context
 	GridSize int
 	Grid     []int
-	Cracks   []Crack
+	cracks   []crack
 }
 
-type Crack struct {
+type crack struct {
 	// the dark lines that look like cracks
 	X  float64
 	Y  float64
 	T  float64 // direction in degrees
-	SP SandPainter
+	SP sandPainter
 }
 
-// Grow a crack it its direction t. Color to the side of it some distance using the SandPainter.
-func (c *Crack) Move(sketch *CrackSketch) {
+// Grow a crack it its direction t. Color to the side of it some distance using the sandPainter.
+func (c *crack) Move(sketch *CrackSketch) {
 	c.X += 0.42 * math.Cos(c.T*math.Pi/180)
 	c.Y += 0.42 * math.Sin(c.T*math.Pi/180)
 
@@ -97,17 +98,17 @@ func (c *Crack) Move(sketch *CrackSketch) {
 		} else if math.Abs(float64(sketch.Grid[cy*sketch.DestWidth+cx])-c.T) > 2.0 {
 			// found a different crack, so this crack ends
 			c.findStart(sketch)
-			makeCrack(sketch)
+			makecrack(sketch)
 		}
 
 	} else {
 		// out of bounds, stop cracking
 		c.findStart(sketch)
-		makeCrack(sketch)
+		makecrack(sketch)
 	}
 }
 
-func (crack *Crack) findStart(sketch *CrackSketch) {
+func (c *crack) findStart(sketch *CrackSketch) {
 	// pick random spots on the canvas until a crack is found
 	// a crack is any cell on the grid with a degree value between -360 and 360, or really less than the blank value
 	// limit the number of times this attempts to find a crack with the timeout
@@ -115,7 +116,7 @@ func (crack *Crack) findStart(sketch *CrackSketch) {
 	found := false
 	timeout := 0
 	for ok := true; ok; ok = ((found == false) && (timeout <= 10000)) {
-		timeout += 1
+		timeout++
 		px = rand.Intn(sketch.DestWidth)
 		py = rand.Intn(sketch.DestHeight)
 		if sketch.Grid[py*sketch.DestWidth+px] < 10000 {
@@ -132,23 +133,24 @@ func (crack *Crack) findStart(sketch *CrackSketch) {
 		} else {
 			a += 90 + util.RandRange(3)
 		}
-		crack.T = float64(a)
-		crack.X = float64(px) // + 0.61 * math.Cos(crack.T * math.Pi / 180)
-		crack.Y = float64(py) // + 0.61 * math.Sin(crack.T * math.Pi / 180)
-		crack.SP = NewSandPainter()
+		c.T = float64(a)
+		c.X = float64(px) // + 0.61 * math.Cos(crack.T * math.Pi / 180)
+		c.Y = float64(py) // + 0.61 * math.Sin(crack.T * math.Pi / 180)
+		c.SP = newsandPainter()
 	}
 }
 
-func makeCrack(sketch *CrackSketch) Crack {
-	crack := Crack{}
+func makecrack(sketch *CrackSketch) crack {
+	crack := crack{}
 	// only make a new crack if there's a slot for one
-	if len(sketch.Cracks) < sketch.CrackLimit {
+	if len(sketch.cracks) < sketch.CrackLimit {
 		crack.findStart(sketch)
-		sketch.Cracks = append(sketch.Cracks, crack)
+		sketch.cracks = append(sketch.cracks, crack)
 	}
 	return crack
 }
 
+// NewCrackSketch sets up the wrapper components
 func NewCrackSketch(crackParams CrackParams) *CrackSketch {
 	fmt.Println("Starting Sketch")
 
@@ -171,7 +173,7 @@ func NewCrackSketch(crackParams CrackParams) *CrackSketch {
 
 	// start the cracks
 	for k := 0; k < s.StartingCracks; k++ {
-		makeCrack(s)
+		makecrack(s)
 	}
 
 	// canvas is a gg image context and contains what gets drawn to the screen
@@ -183,18 +185,20 @@ func NewCrackSketch(crackParams CrackParams) *CrackSketch {
 	return s
 }
 
+// Output creates the image from the canvas
 func (s *CrackSketch) Output() image.Image {
 	return s.DC.Image()
 }
 
+// Update iterates through all of the cracks
 func (s *CrackSketch) Update() {
 	// allow the cracks to grow a step
-	for i := 0; i < len(s.Cracks); i++ {
-		s.Cracks[i].Move(s)
+	for i := 0; i < len(s.cracks); i++ {
+		s.cracks[i].Move(s)
 	}
 }
 
-type SandPainter struct {
+type sandPainter struct {
 	// creates transparent "grains of sands" perpendicular to the crack with a lot of variation
 	// contains color components and a grain size
 	R         int
@@ -203,15 +207,15 @@ type SandPainter struct {
 	GrainSize float64
 }
 
-func NewSandPainter() SandPainter {
+func newsandPainter() sandPainter {
 	// aim for desert colors, a slight departure from Tarbell's
 	// Tarbell's version takes colors from an image, while this one selects from a predefined list of colors
-	color := crack_colors[rand.Intn(len(crack_colors))]
-	sp := SandPainter{R: color[0], G: color[1], B: color[2], GrainSize: util.RandFloat64RangeFrom(0.01, 0.01)}
+	color := crackColors[rand.Intn(len(crackColors))]
+	sp := sandPainter{R: color[0], G: color[1], B: color[2], GrainSize: util.RandFloat64RangeFrom(0.01, 0.01)}
 	return sp
 }
 
-func (sp *SandPainter) Render(s *CrackSketch, x, y, ox, oy float64) {
+func (sp *sandPainter) render(s *CrackSketch, x, y, ox, oy float64) {
 	// modulate gain, clamping it between 0 and 1.0
 	sp.GrainSize += util.RandFloat64Range(0.050)
 	maxg := 1.0
@@ -237,7 +241,7 @@ func (sp *SandPainter) Render(s *CrackSketch, x, y, ox, oy float64) {
 	}
 }
 
-func (c *Crack) RegionColor(s *CrackSketch) {
+func (c *crack) RegionColor(s *CrackSketch) {
 	// find the open region that can be colored that's perpendicular to the crack at the new pixel
 	// we use the boundary of this open space to determine how to draw the sand
 	rx := c.X
@@ -261,5 +265,5 @@ func (c *Crack) RegionColor(s *CrackSketch) {
 		}
 	}
 
-	c.SP.Render(s, rx, ry, c.X, c.Y)
+	c.SP.render(s, rx, ry, c.X, c.Y)
 }

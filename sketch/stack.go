@@ -9,14 +9,14 @@ import (
 	"gitlab.com/ericworkman/generative/util"
 )
 
+// StackParams contains user input
 type StackParams struct {
-	// tweakable parameters for the cli
 	DestWidth  int
 	DestHeight int
 }
 
+// StackSketch is the canvas and grid wrapper
 type StackSketch struct {
-	// canvas and grid wrapper
 	StackParams
 	source       image.Image
 	DC           *gg.Context
@@ -24,6 +24,7 @@ type StackSketch struct {
 	sourceHeight int
 }
 
+// NewStackSketch creates a stack sketch
 func NewStackSketch(source image.Image, params StackParams) *StackSketch {
 	fmt.Println("Starting Sketch")
 
@@ -43,10 +44,12 @@ func NewStackSketch(source image.Image, params StackParams) *StackSketch {
 	return s
 }
 
+// Output returns the canvas as an image
 func (s *StackSketch) Output() image.Image {
 	return s.DC.Image()
 }
 
+// Update performs a single iteration
 func (s *StackSketch) Update(i int) {
 	limitX := float64(s.DestWidth) / float64(i)
 	limitY := float64(s.DestHeight) / float64(i)

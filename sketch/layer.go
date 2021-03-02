@@ -10,6 +10,7 @@ import (
 	"gitlab.com/ericworkman/generative/util"
 )
 
+// LayerParams contains all the user input options
 type LayerParams struct {
 	DestWidth              int
 	DestHeight             int
@@ -25,6 +26,7 @@ type LayerParams struct {
 	PathInversionThreshold float64
 }
 
+// LayerSketch is the wrapping container
 type LayerSketch struct {
 	LayerParams
 	source          image.Image
@@ -35,6 +37,7 @@ type LayerSketch struct {
 	PathSize        float64
 }
 
+// NewLayerSketch creates a new layer sketch
 func NewLayerSketch(source image.Image, layerParams LayerParams) *LayerSketch {
 	s := &LayerSketch{LayerParams: layerParams}
 	bounds := source.Bounds()
@@ -52,10 +55,12 @@ func NewLayerSketch(source image.Image, layerParams LayerParams) *LayerSketch {
 	return s
 }
 
+// Output saves the canvas as an image
 func (s *LayerSketch) Output() image.Image {
 	return s.DC.Image()
 }
 
+// Update performs a single iteration
 func (s *LayerSketch) Update() {
 	rndX := rand.Float64() * float64(s.sourceWidth)
 	rndY := rand.Float64() * float64(s.sourceHeight)
