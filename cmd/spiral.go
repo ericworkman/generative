@@ -11,11 +11,6 @@ import (
 	"gitlab.com/ericworkman/generative/util"
 )
 
-var (
-	beta = 0.101
-	mu   = 0.10
-)
-
 // spiralCmd represents the spiral command
 var spiralCmd = &cobra.Command{
 	Use:   "spiral",
@@ -63,6 +58,6 @@ func init() {
 	spiralCmd.Flags().IntVarP(&limitByIterations, "iterations", "i", 3, "Number of iterations")
 	spiralCmd.Flags().IntVarP(&width, "width", "", 1920, "Width of output")
 	spiralCmd.Flags().IntVarP(&height, "height", "", 1080, "Height of output")
-	layerCmd.Flags().Float64VarP(&beta, "beta", "", 0.100, "Tweakable")
-	layerCmd.Flags().Float64VarP(&mu, "mu", "", 0.100, "Tweakable")
+	spiralCmd.Flags().Float64VarP(&beta, "beta", "", 0.100, "Tweakable")
+	spiralCmd.Flags().Float64VarP(&mu, "mu", "", 0.100, "Tweakable")
 }

@@ -78,16 +78,13 @@ func (s *SpiralSketch) Update(i int) {
 	// offset controls how many get skipped in the tight center
 	// growth controls how close the pattern stays
 	j := math.Pi*15 + float64(i)/math.Pi
-
 	x := centerX + s.Beta*math.Exp(j*s.Mu)*math.Cos(j)
 	y := centerY + s.Beta*math.Exp(j*s.Mu)*math.Sin(j)
-	//fmt.Println(i, j, x, y)
 
 	color := spiralColors[rand.Intn(len(spiralColors))]
 	s.DC.SetRGBA255(color[0], color[1], color[2], i)
 	// logistic growth of radius, barely noticable in practice I think
 	s.currentR += 0.006 * float64(i) * float64(s.Iterations-i) / float64(s.Iterations)
-	//fmt.Println(s.currentR)
 	s.DC.DrawCircle(x, y, s.currentR)
 	s.DC.FillPreserve()
 	s.DC.Stroke()

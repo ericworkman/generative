@@ -37,7 +37,7 @@ var fireworkCmd = &cobra.Command{
 		}()
 
 		for i := 0; i <= limitByIterations; i++ {
-			if i%(limitByIterations/10) == 0 {
+			if i%(util.MaxInt(1, limitByIterations/10)) == 0 {
 				fmt.Println("Iteration", i)
 			}
 

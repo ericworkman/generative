@@ -21,8 +21,13 @@ var (
 	save          = false
 
 	limitByIterations = 0
-	alpha             = float64(0)
-	jitter            = float64(0)
+
+	alpha  = float64(0)
+	jitter = float64(0)
+	seeds  = 0
+
+	beta = 0.101
+	mu   = 0.10
 )
 
 var cfgFile string
