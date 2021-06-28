@@ -27,7 +27,10 @@ var (
 	seeds  = 0
 
 	beta = 0.101
-	mu   = 0.10
+	mu   = 0.1
+
+	spiralBeta = 1.0
+	spiralMu   = 0.1
 )
 
 var cfgFile string

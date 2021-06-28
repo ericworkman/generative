@@ -46,13 +46,19 @@ type SpiralSketch struct {
 	SpiralParams
 	DC       *gg.Context
 	currentR float64
+	centerX  float64
+	centerY  float64
 }
 
 // NewSpiralSketch initializes the canvas and SpiralSketch
 func NewSpiralSketch(params SpiralParams) *SpiralSketch {
 	fmt.Println("Starting Sketch")
 
-	s := &SpiralSketch{SpiralParams: params, currentR: 2.0}
+	s := &SpiralSketch{SpiralParams: params,
+		currentR: 2.0,
+		centerX:  float64(params.DestWidth) / 2.0,
+		centerY:  float64(params.DestHeight) / 2.0,
+	}
 
 	// canvas is a gg image context and contains what gets drawn to the screen
 	canvas := gg.NewContext(s.DestWidth, s.DestHeight)
@@ -72,20 +78,18 @@ func (s *SpiralSketch) Output() image.Image {
 
 // Update makes a logical step into generation
 func (s *SpiralSketch) Update(i int) {
-	centerX := float64(s.DestWidth) / 2.0
-	centerY := float64(s.DestHeight) / 2.0
-
-	// offset controls how many get skipped in the tight center
-	// growth controls how close the pattern stays
-	j := math.Pi*15 + float64(i)/math.Pi
-	x := centerX + s.Beta*math.Exp(j*s.Mu)*math.Cos(j)
-	y := centerY + s.Beta*math.Exp(j*s.Mu)*math.Sin(j)
+	j := float64(i)
+	x := s.centerX + (s.Beta * math.Exp(j*s.Mu) * math.Cos(j))
+	y := s.centerY + (s.Beta * math.Exp(j*s.Mu) * math.Sin(j))
 
 	color := spiralColors[rand.Intn(len(spiralColors))]
-	s.DC.SetRGBA255(color[0], color[1], color[2], i)
+	s.DC.SetRGBA255(color[0], color[1], color[2], 255.0)
 	// logistic growth of radius, barely noticable in practice I think
 	s.currentR += 0.006 * float64(i) * float64(s.Iterations-i) / float64(s.Iterations)
-	s.DC.DrawCircle(x, y, s.currentR)
+	if x >= 0.0 && y >= 0.0 && x <= float64(s.DestHeight)*1.5 && y <= float64(s.DestHeight)*1.5 {
+		s.DC.DrawCircle(x, y, s.currentR)
+	}
 	s.DC.FillPreserve()
+
 	s.DC.Stroke()
 }

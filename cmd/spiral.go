@@ -22,8 +22,8 @@ var spiralCmd = &cobra.Command{
 			DestWidth:  width,
 			DestHeight: height,
 			Iterations: limitByIterations,
-			Beta:       beta,
-			Mu:         mu,
+			Beta:       spiralBeta,
+			Mu:         spiralMu,
 		}
 
 		csketch := sketch.NewSpiralSketch(params)
@@ -58,6 +58,6 @@ func init() {
 	spiralCmd.Flags().IntVarP(&limitByIterations, "iterations", "i", 3, "Number of iterations")
 	spiralCmd.Flags().IntVarP(&width, "width", "", 1920, "Width of output")
 	spiralCmd.Flags().IntVarP(&height, "height", "", 1080, "Height of output")
-	spiralCmd.Flags().Float64VarP(&beta, "beta", "", 0.100, "Tweakable")
-	spiralCmd.Flags().Float64VarP(&mu, "mu", "", 0.100, "Tweakable")
+	spiralCmd.Flags().Float64VarP(&spiralBeta, "beta", "", 1, "Tweakable scale of spiral")
+	spiralCmd.Flags().Float64VarP(&spiralMu, "mu", "", 0.100, "Tweakable speed of growth of spiral")
 }

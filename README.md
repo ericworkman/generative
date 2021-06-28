@@ -37,9 +37,11 @@ go run main.go [command] [flags]
 
 ![](images/layer.png)
 
-#### spiral
+#### rows
 
-WIP
+![](images/rows.png)
+
+#### spiral
 
 ![](images/spiral.png)
 
