@@ -14,7 +14,7 @@ import (
 
 var crackCmd = &cobra.Command{
 	Use:   "crack",
-	Short: "Create sketches in the stle of Jared Tarbell",
+	Short: "Create sketches in the style of Jared Tarbell",
 	Long: `Create a sketch of growing cracks that "crystalize"
 `,
 	Run: func(cmd *cobra.Command, args []string) {
