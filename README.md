@@ -25,6 +25,10 @@ go run main.go [command] [flags]
 
 ![](images/firework.png)
 
+#### flip
+
+![](images/flip.png)
+
 #### grid
 
 ![](images/grid.png)
