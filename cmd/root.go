@@ -31,6 +31,8 @@ var (
 
 	spiralBeta = 1.0
 	spiralMu   = 0.1
+
+	gifme = false
 )
 
 var cfgFile string

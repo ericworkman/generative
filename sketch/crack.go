@@ -70,7 +70,7 @@ func (c *crack) Move(sketch *CrackSketch) {
 	c.X += 0.42 * math.Cos(c.T*math.Pi/180)
 	c.Y += 0.42 * math.Sin(c.T*math.Pi/180)
 
-	// bound check
+	// bound checks
 	z := 0.25
 	cx := int(c.X + util.RandFloat64Range(z))
 	cy := int(c.Y + util.RandFloat64Range(z))
@@ -91,12 +91,12 @@ func (c *crack) Move(sketch *CrackSketch) {
 	if (cx >= 0) && (cy >= 0) && (cx < sketch.DestWidth) && (cy < sketch.DestHeight) {
 		// within bounds of canvas
 
-		if (sketch.Grid[cy*sketch.DestWidth+cx] > 10000) || (math.Abs(float64(sketch.Grid[cy*sketch.DestWidth+cx])-c.T) < 5.0) {
-			// continue growing
+		if (sketch.Grid[cy*sketch.DestWidth+cx] > 10000) || (math.Abs(float64(sketch.Grid[cy*sketch.DestWidth+cx])-c.T) < 3.0) {
+			// same path, continue growing
 			sketch.Grid[cy*sketch.DestWidth+cx] = int(c.T)
 
-		} else if math.Abs(float64(sketch.Grid[cy*sketch.DestWidth+cx])-c.T) > 2.0 {
-			// found a different crack, so this crack ends
+		} else {
+			// found a different crack or boundary, so this crack ends
 			c.findStart(sketch)
 			makecrack(sketch)
 		}
@@ -129,9 +129,21 @@ func (c *crack) findStart(sketch *CrackSketch) {
 		// we add some angle jitter here too for interest
 		a := sketch.Grid[py*sketch.DestWidth+px]
 		if rand.Intn(100) < 50 {
-			a -= 90 + util.RandRange(3)
+			a -= 90 + util.RandRange(5)
 		} else {
-			a += 90 + util.RandRange(3)
+			a += 90 + util.RandRange(5)
+		}
+		//normalize
+		for {
+			if a < 0 {
+				a += 360
+			}
+			if a > 360 {
+				a -= 360
+			}
+			if a >= 0 && a <= 360 {
+				break
+			}
 		}
 		c.T = float64(a)
 		c.X = float64(px) // + 0.61 * math.Cos(crack.T * math.Pi / 180)
@@ -166,7 +178,7 @@ func NewCrackSketch(crackParams CrackParams) *CrackSketch {
 	// preseed some spots in the grid with real angles
 	for k := 0; k < s.Seeds; k++ {
 		i := rand.Intn(s.DestWidth*s.DestHeight - 1)
-		cgrid[i] = rand.Intn(360)
+		cgrid[i] = rand.Intn(540)
 	}
 
 	s.Grid = cgrid

@@ -6,6 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"image"
+	"image/gif"
+
+	"github.com/andybons/gogif"
 	"github.com/spf13/cobra"
 
 	"gitlab.com/ericworkman/generative/sketch"
@@ -23,12 +27,19 @@ var crackCmd = &cobra.Command{
 		params := sketch.CrackParams{
 			DestWidth:      width,
 			DestHeight:     height,
-			CrackLimit:     10,
+			CrackLimit:     25,
 			Seeds:          width/10 + height/10,
-			StartingCracks: 2,
+			StartingCracks: 5,
 		}
 
 		csketch := sketch.NewCrackSketch(params)
+
+		f, err := os.Create("my-image.gif")
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		outGif := &gif.GIF{}
 
 		// catch the sigterm signal for ctrl-c quitting mostly
 		// save the output at this point
@@ -37,6 +48,18 @@ var crackCmd = &cobra.Command{
 		go func() {
 			<-c
 			util.SaveOutput(csketch.Output(), outputImgName)
+			if gifme == true {
+				simage := csketch.Output()
+				bounds := simage.Bounds()
+				palettedImage := image.NewPaletted(bounds, nil)
+				quantizer := gogif.MedianCutQuantizer{NumColor: 64}
+				quantizer.Quantize(palettedImage, bounds, simage, image.ZP)
+
+				// Add new frame to animated GIF
+				outGif.Image = append(outGif.Image, palettedImage)
+				outGif.Delay = append(outGif.Delay, 100)
+				gif.EncodeAll(f, outGif)
+			}
 			os.Exit(1)
 		}()
 
@@ -45,14 +68,33 @@ var crackCmd = &cobra.Command{
 
 			csketch.Update()
 
-			// save the output every so often so that we don't just lose a lot of work
-			// this isn't a nice way of handling it, but we'll live
-			if (save == true) && (i%100 == 0) {
-				util.SaveOutput(csketch.Output(), outputImgName)
+			if (gifme == true) && (i%10 == 0) {
+				simage := csketch.Output()
+				bounds := simage.Bounds()
+				palettedImage := image.NewPaletted(bounds, nil)
+				quantizer := gogif.MedianCutQuantizer{NumColor: 64}
+				quantizer.Quantize(palettedImage, bounds, simage, image.ZP)
+
+				// Add new frame to animated GIF
+				outGif.Image = append(outGif.Image, palettedImage)
+				outGif.Delay = append(outGif.Delay, 0)
 			}
 		}
 
 		util.SaveOutput(csketch.Output(), outputImgName)
+		if gifme == true {
+			simage := csketch.Output()
+			bounds := simage.Bounds()
+			palettedImage := image.NewPaletted(bounds, nil)
+			quantizer := gogif.MedianCutQuantizer{NumColor: 64}
+			quantizer.Quantize(palettedImage, bounds, simage, image.ZP)
+
+			// Add new frame to animated GIF
+			outGif.Image = append(outGif.Image, palettedImage)
+			outGif.Delay = append(outGif.Delay, 100)
+			gif.EncodeAll(f, outGif)
+		}
+
 	},
 }
 
@@ -64,4 +106,6 @@ func init() {
 	crackCmd.Flags().IntVarP(&width, "width", "", 1920, "Width of output")
 	crackCmd.Flags().IntVarP(&height, "height", "", 1080, "Height of output")
 	crackCmd.Flags().BoolVarP(&save, "save", "s", false, "Save output regularly")
+	crackCmd.Flags().BoolVarP(&gifme, "gif", "", false, "Create a gif of the results")
+
 }
